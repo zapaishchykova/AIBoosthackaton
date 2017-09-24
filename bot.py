@@ -51,12 +51,12 @@ def advise(bot, update):
     doctor = loaded_model.predict([update.message.text])
     prob = np.max(loaded_model.predict_proba([update.message.text]))
 
-    if prob < 0.1:
+    if (prob < 0.15) | (len(update.message.text) < 20):
         update.message.reply_text('Хмм, опиши более детально симптомы')
         logger.info("Failed to get correct prediction %f", prob)
         return ADVISE
     else :    
-        logger.info("Advised - %s " % doctor[0])
+        logger.info("Advised - %s, prob %f" % (doctor[0], prob))
         update.message.reply_text('Тебе нужен %s ! Пришли мне свое местоположение, и я найду тебе врача!' % doctor[0])
         return LOCATION
 
@@ -75,7 +75,6 @@ def location(bot, update):
     update.message.reply_text('Получай адресок:')
 
     API_KEY = 'AIzaSyB8iePIC8qHoF24pa-EM6Djm4EgaJRrRT0'
-
     params = {
         'key': API_KEY ,
         'location': '%f,%f' % (user_location.latitude, user_location.longitude),
@@ -85,7 +84,7 @@ def location(bot, update):
     response = requests.get('https://maps.googleapis.com/maps/api/place/nearbysearch/json', params=params)
     points = response.json()
 
-    bot.sendLocation(update.message.chat.id, latitude=points['results'][0]['geometry']['location']['lng'], longitude=points['results'][0]['geometry']['location']['lat'])
+    bot.sendLocation(update.message.chat.id, latitude=points['results'][0]['geometry']['location']['lat'], longitude=points['results'][0]['geometry']['location']['lng'])
     return ConversationHandler.END
 
 
