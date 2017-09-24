@@ -23,6 +23,9 @@ import logging
 from googleplaces import GooglePlaces, types, lang
 import googlemaps
 import pickle
+import requests
+import json
+import numpy as np
 
 # Enable logging
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -31,10 +34,12 @@ logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s
 logger = logging.getLogger(__name__)
 
 ADVISE, LOCATION = range(2)
+filename = 'finalized_model_log_reg.pkl'
+loaded_model = pickle.load(open(filename, 'rb'))
 
 
 def start(bot, update):
-    update.message.reply_text('Дратути! Как твое самочувствие?')
+    update.message.reply_text('Дратути! Как твое самочувствие?')   
     return ADVISE
 
 
@@ -42,12 +47,18 @@ def advise(bot, update):
     user = update.message.from_user
     logger.info("Question recieved from %s: %s" % (user.first_name, update.message.text))
     # load the model from disk
-    filename = 'finalized_model.sav'
-    loaded_model = pickle.load(open(filename, 'rb'))
-    result = loaded_model.predict([update.message.text])
-    logger.info("Advised - %s " % result[0])
-    update.message.reply_text('Тебе нужен %s ! Пришли мне свое местоположение, и я найду тебе врача!' % result[0])
+    global doctor
+    doctor = loaded_model.predict([update.message.text])
+    prob = np.max(loaded_model.predict_proba([update.message.text]))
 
+    if prob < 0.1:
+        update.message.reply_text('Хмм, опиши более детально симптомы')
+        logger.info("Failed to get correct prediction %f", prob)
+        return ADVISE
+    else :    
+        logger.info("Advised - %s " % doctor[0])
+        update.message.reply_text('Тебе нужен %s ! Пришли мне свое местоположение, и я найду тебе врача!' % doctor[0])
+        return LOCATION
 
 def skip_location(bot, update):
     user = update.message.from_user
@@ -63,23 +74,18 @@ def location(bot, update):
                 % (user.first_name, user_location.latitude, user_location.longitude))
     update.message.reply_text('Получай адресок:')
 
-    gmaps = googlemaps.Client(key='AIzaSyB8iePIC8qHoF24pa-EM6Djm4EgaJRrRT0')
-
     API_KEY = 'AIzaSyB8iePIC8qHoF24pa-EM6Djm4EgaJRrRT0'
-    google_places = GooglePlaces(API_KEY)
-    query_result = google_places.nearby_search(
-        location="London", keyword='Fish and Chips',
-        radius=2000, types=[types.TYPE_FOOD])
 
-    #results = gmaps.reverse_geocode((user_location.latitude, user_location.longitude),
-    #                                      keyword='Fish and Chips',
-    #                                      location_type='ROOFTOP',
-    #                                      result_type='street_address')
+    params = {
+        'key': API_KEY ,
+        'location': '%f,%f' % (user_location.latitude, user_location.longitude),
+        'radius': 5000,
+        'keyword':  '%s' % doctor[0]}
 
-    #lat, lng = google_places.address_to_latlng(query_result)
-    logger.info(results)
+    response = requests.get('https://maps.googleapis.com/maps/api/place/nearbysearch/json', params=params)
+    points = response.json()
 
-    bot.sendLocation(update.message.chat.id, latitude=user_location.latitude, longitude=user_location.longitude)
+    bot.sendLocation(update.message.chat.id, latitude=points['results'][0]['geometry']['location']['lng'], longitude=points['results'][0]['geometry']['location']['lat'])
     return ConversationHandler.END
 
 
