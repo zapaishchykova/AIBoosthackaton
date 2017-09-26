@@ -54,7 +54,8 @@ def advise(bot, update):
     prob = np.max(loaded_model.predict_proba([update.message.text]))
 
     if (prob < 0.15) | (len(update.message.text) < 10):
-        update.message.reply_text('Хмм, опиши более детально симптомы.')
+        ask_questions = ['Хмм, опиши более детально симптомы.','А что еще беспокоит?','Расскажи мне более подробно что тебя беспокоит что бы я мог более точно посоветовать тебе врача']
+        update.message.reply_text(random.choice(ask_questions))
         logger.info("Failed to get correct prediction %f", prob)
         return ADVISE
     else :    
