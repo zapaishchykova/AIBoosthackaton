@@ -26,6 +26,7 @@ import pickle
 import requests
 import json
 import numpy as np
+import random
 
 # Enable logging
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
