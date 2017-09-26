@@ -53,7 +53,7 @@ def advise(bot, update):
     doctor = loaded_model.predict([update.message.text])
     prob = np.max(loaded_model.predict_proba([update.message.text]))
 
-    if (prob < 0.1) | (len(update.message.text) < 10):
+    if (prob < 0.15) | (len(update.message.text) < 10):
         update.message.reply_text('Хмм, опиши более детально симптомы.')
         logger.info("Failed to get correct prediction %f", prob)
         return ADVISE
