@@ -59,7 +59,7 @@ def advise(bot, update):
         return ADVISE
     else :    
         logger.info("Advised - %s, prob %f" % (doctor[0], prob))
-        update.message.reply_text('Тебе нужен %s ! Пришли мне свое местоположение, и я найду тебе врача! Для отмены отправь //cancel ' % doctor[0])
+        update.message.reply_text('Тебе нужен %s ! Пришли мне свое местоположение, и я найду тебе врача! Для отмены отправь /cancel ' % doctor[0])
         return LOCATION
 
 def skip_location(bot, update):
@@ -94,7 +94,7 @@ def cancel(bot, update):
     user = update.message.from_user
     replies = ['Будьте здоровы! Дотвидания','Не болей!','Выздоравливай!']
     update.message.reply_text(random.choice(replies))
-    update.message.reply_text('Что бы повторно пройти консультацию используй команду //start')
+    update.message.reply_text('Что бы повторно пройти консультацию используй команду /start')
     return ConversationHandler.END
 
 
