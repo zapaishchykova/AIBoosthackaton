@@ -39,7 +39,8 @@ loaded_model = pickle.load(open(filename, 'rb'))
 
 
 def start(bot, update):
-    update.message.reply_text('Дратути! Как твое самочувствие?')   
+    greeting = ['Дратути! Как твое самочувствие?', 'Здравствуйте! На что жалутесь?', 'Привет! У тебя что-то болит?', 'Доброго времени суток, уважаемый. Опишите мне вашу проблему']
+    update.message.reply_text(random.choice(greeting))   
     return ADVISE
 
 
@@ -51,13 +52,13 @@ def advise(bot, update):
     doctor = loaded_model.predict([update.message.text])
     prob = np.max(loaded_model.predict_proba([update.message.text]))
 
-    if (prob < 0.05) | (len(update.message.text) < 10):
-        update.message.reply_text('Хмм, опиши более детально симптомы')
+    if (prob < 0.1) | (len(update.message.text) < 10):
+        update.message.reply_text('Хмм, опиши более детально симптомы.')
         logger.info("Failed to get correct prediction %f", prob)
         return ADVISE
     else :    
         logger.info("Advised - %s, prob %f" % (doctor[0], prob))
-        update.message.reply_text('Тебе нужен %s ! Пришли мне свое местоположение, и я найду тебе врача!' % doctor[0])
+        update.message.reply_text('Тебе нужен %s ! Пришли мне свое местоположение, и я найду тебе врача! Для отмены отправь //cancel ' % doctor[0])
         return LOCATION
 
 def skip_location(bot, update):
@@ -90,8 +91,9 @@ def location(bot, update):
 
 def cancel(bot, update):
     user = update.message.from_user
-    logger.info("Будьте здоровы!")
-    update.message.reply_text('Дотвидания')
+    replies = ['Будьте здоровы! Дотвидания','Не болей!','Выздоравливай!']
+    update.message.reply_text(random.choice(replies))
+    update.message.reply_text('Что бы повторно пройти консультацию используй команду //start')
     return ConversationHandler.END
 
 
